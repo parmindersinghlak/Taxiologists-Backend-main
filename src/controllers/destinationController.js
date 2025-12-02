@@ -3,7 +3,7 @@ const Destination = require("../models/Destination");
 async function listDestinations(req, res, next) {
   try {
     const { q, page = 1, limit = 20 } = req.query;
-    const filter = {};
+    const filter = { isDriverGenerated: { $ne: true } }; // Exclude driver-generated destinations
     if (q)
       filter.$or = [
         { name: new RegExp(q, "i") },
@@ -23,19 +23,19 @@ async function listDestinations(req, res, next) {
 async function createDestination(req, res, next) {
   try {
     const { name, address, coordinates } = req.body || {};
-    if (!name || !address) {
+    if (!name) {
       return res
         .status(400)
         .json({
           success: false,
           code: "VALIDATION_ERROR",
-          message: "name and address are required",
+          message: "name is required",
         });
     }
     
     const destinationData = {
       name,
-      address,
+      address: address || "", // Address is optional, default to empty string
       createdBy: req.user.id,
     };
     

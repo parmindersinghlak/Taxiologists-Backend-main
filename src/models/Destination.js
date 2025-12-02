@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const destinationSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
-    address: { type: String, required: true, trim: true },
+    address: { type: String, trim: true }, // Address is optional
     coordinates: {
       lat: { type: Number },
       lng: { type: Number },

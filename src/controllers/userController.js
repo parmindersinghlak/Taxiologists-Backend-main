@@ -7,7 +7,7 @@ function forbidManagerCreatingAdmin(req) {
 
 async function listUsers(req, res, next) {
   try {
-    const { role, status, q } = req.query;
+    const { role, status, q, page = 1, limit = 20 } = req.query;
     const filter = {};
     if (role) filter.role = role;
     if (status) filter.status = status;
@@ -17,8 +17,14 @@ async function listUsers(req, res, next) {
         { fullName: new RegExp(q, "i") },
         { email: new RegExp(q, "i") },
       ];
-    const users = await User.find(filter).sort({ createdAt: -1 });
-    res.json({ success: true, users });
+    
+    const docs = await User.find(filter)
+      .sort({ createdAt: -1 })
+      .skip((+page - 1) * +limit)
+      .limit(+limit);
+    
+    const total = await User.countDocuments(filter);
+    res.json({ success: true, users: docs, items: docs, total, page: +page, limit: +limit });
   } catch (e) {
     next(e);
   }

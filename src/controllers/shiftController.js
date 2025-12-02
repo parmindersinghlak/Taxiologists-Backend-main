@@ -186,7 +186,7 @@ exports.getCurrentShift = async (req, res) => {
  */
 exports.getShiftTimeline = async (req, res) => {
   try {
-    const { driverId, date } = req.query;
+    const { driverId, date, page = 1, limit = 10 } = req.query;
     
     let query = {};
     
@@ -221,9 +221,14 @@ exports.getShiftTimeline = async (req, res) => {
       ];
     }
     
+    const skip = (+page - 1) * +limit;
+    const total = await Shift.countDocuments(query);
+    
     const shifts = await Shift.find(query)
       .populate('driver', 'fullName username phone')
       .sort({ startTime: -1 })
+      .skip(skip)
+      .limit(+limit)
       .lean();
     
     // Calculate duration for each shift
@@ -248,7 +253,11 @@ exports.getShiftTimeline = async (req, res) => {
     return res.json({ 
       success: true, 
       data: shiftsWithDuration,
-      count: shiftsWithDuration.length
+      items: shiftsWithDuration,
+      count: shiftsWithDuration.length,
+      total,
+      page: +page,
+      limit: +limit
     });
   } catch (err) {
     return res.status(500).json({ 
